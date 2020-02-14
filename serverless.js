@@ -15,8 +15,9 @@ const defaults = {
   name: 'daysmart-service',
   region: 'us-east-1',
   topic: 'arn:aws:sns:us-east-1:933922255734:daysmart-service-base-sns-topic-nj9ex4-b8au9pd',
-  code: './code'
-}
+  code: './code',
+  events: [{"exists": true}]
+};
 
 class AwsProcess extends Component {
   async default(inputs = {}) {
@@ -28,18 +29,18 @@ class AwsProcess extends Component {
     const role = await this.load('@serverless/aws-iam-role')
     const lambda = await this.load('@serverless/aws-lambda')
     const dynamodb = await this.load('@serverless/aws-dynamodb')
-    const snsSubscription = await this.load('@serverless/aws-sns-subscription')
+    const snsSubscription = await this.load('../aws-sns-subscription')
     
     this.context.status('Deploying AWS S3 Bucket')
     const bucketInputs = {
-      name: config.name + '-process-' + this.context.resourceId(),
+      name: config.name + '-process',
       region: config.region
     }
     const bucketOutputs = await bucket(bucketInputs)
     
     this.context.status('Deploying AWS IAM Role')
     const roleInputs = {
-      name: config.name + '-process-lambda-role-' + this.context.resourceId(),
+      name: config.name + '-process-lambda-role',
       region: config.region,
       service: 'lambda.amazonaws.com',
       policy: getPolicy(inputs.permissions)
@@ -48,7 +49,7 @@ class AwsProcess extends Component {
 
     this.context.status('Deploying AWS Lambda & Uploading Code')
     const lambdaInputs = {
-      name: config.name + '-process-lambda-' + this.context.resourceId(),
+      name: config.name + '-process-lambda',
       description: inputs.description || 'A function for the ' + config.name + ' process component',
       memory: inputs.memory || 896,
       timeout: inputs.timeout || 10,
@@ -65,18 +66,21 @@ class AwsProcess extends Component {
     
     this.context.status('Deploying AWS DynamoDB Table')
     const dynamodbInputs = {
-      name: config.name + '-process-dynamodb-table-' + this.context.resourceId(),
-      region: config.region
+      name: config.name + '-process-dynamodb-table',
+      region: config.region,
+      keySchema: [{'AttributeName' : 'pk', 'KeyType': 'HASH'},{'AttributeName' : 'sk', 'KeyType': 'RANGE'}],
+      attributeDefinitions: [{'AttributeName' : 'pk', 'AttributeType': 'S'},{'AttributeName' : 'sk', 'AttributeType': 'S'}]
     }
     const dynamodbOutputs = await dynamodb(dynamodbInputs)
     
     this.context.status('Deploying AWS snsSubscription')
     const snsSubscriptionInputs = {
-      name: config.name + '-process-sns-subscription-' + this.context.resourceId(),
+      name: config.name + '-process-sns-subscription',
       region: config.region,
       topic: config.topic,
       protocol: 'lambda',
-      endpoint: lambdaOutputs.arn
+      endpoint: lambdaOutputs.arn,
+      subscriptionAttributes: {FilterPolicy: JSON.stringify({"EventType": config.events})}
       
     }
     const snsSubscriptionOutputs = await snsSubscription(snsSubscriptionInputs)
