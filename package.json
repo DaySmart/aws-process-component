@@ -16,7 +16,7 @@
     "@serverless/aws-iam-role": "^1.0.0",
     "@serverless/aws-lambda": "^3.0.0",
     "@serverless/aws-s3": "^4.0.0",
-    "@serverless/aws-sns-subscription": "^1.0.0",
+    "@serverless/aws-sns-subscription": "git@github.com:DaySmart/aws-sns-subscription.git",
     "@serverless/core": "^1.1.1",
     "aws-sdk": "^2.538.0",
     "ramda": "^0.26.1"

@@ -29,7 +29,7 @@ class AwsProcess extends Component {
     const role = await this.load('@serverless/aws-iam-role')
     const lambda = await this.load('@serverless/aws-lambda')
     const dynamodb = await this.load('@serverless/aws-dynamodb')
-    const snsSubscription = await this.load('../aws-sns-subscription')
+    const snsSubscription = await this.load('@serverless/aws-sns-subscription')
     
     this.context.status('Deploying AWS S3 Bucket')
     const bucketInputs = {
@@ -53,7 +53,7 @@ class AwsProcess extends Component {
       description: inputs.description || 'A function for the ' + config.name + ' process component',
       memory: inputs.memory || 896,
       timeout: inputs.timeout || 10,
-      runtime: 'nodejs8.10',
+      runtime: 'nodejs12.x',
       code: config.code,
       role: roleOutputs,
       handler: 'shim.handler',
